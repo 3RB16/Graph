@@ -1,0 +1,17 @@
+FROM golang:1.17
+
+WORKDIR /app
+
+# Copy go.mod and go.sum files
+COPY go.mod ./
+
+# Download dependencies to ensure go.sum is correct
+RUN go mod download
+
+# Copy the rest of the application source code
+COPY . .
+
+# Run `go mod tidy` and build the application
+RUN go mod tidy && go build -o main .
+
+CMD ["./main"]

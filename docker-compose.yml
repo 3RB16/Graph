@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  golang_app:
+    build:
+      context: ./graph_processor
+      dockerfile: Dockerfile.golang
+    depends_on:
+      - db
+      - redis
+      - clickhouse
+
+  python_app:
+    build:
+      context: ./data_viewer
+      dockerfile: Dockerfile.python
+    depends_on:
+      - db
+      - redis
+      - clickhouse
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: graphdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    environment:
+      CLICKHOUSE_DB: graphdb
+    ports:
+      - "8123:8123"  # HTTP port for ClickHouse
+      - "9000:9000"  # Native port for ClickHouse
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - db
+
+
+volumes:
+  postgres_data:
+  clickhouse_data:
